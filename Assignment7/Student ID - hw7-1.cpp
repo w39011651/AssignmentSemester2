@@ -141,6 +141,7 @@ public:
              myData.myFirst[position] = val;
              myData.myLast++;
          }
+         return myData.myFirst + position;
       }
       else
          return nullptr;
@@ -190,7 +191,7 @@ public:
               myData.myFirst[i] = myData.myFirst[i + 1];
           }
           myData.myLast--;
-
+          return myData.myFirst;
       }
       else
          return nullptr;
@@ -384,8 +385,8 @@ public:
    bool operator<( HugeInteger &right )
    {
        size_t lhs = size(), rhs = right.size();
-       typename T::iterator lrit = integer.end();
-       typename T::iterator rrit = right.integer.end();
+       typename T::iterator lrit = integer.end()-1;
+       typename T::iterator rrit = right.integer.end()-1;
        if (lhs < rhs) {
            return true;
        }
@@ -423,11 +424,33 @@ public:
 
       HugeInteger difference( *this );
 
-
-
+      HugeInteger subtraction(op2), result(difference);
+      size_t lhsize = integer.size(), rhsize = op2.integer.size(), minsize=0;
+      //假設無負數
+      (lhsize > rhsize) ? minsize = rhsize : minsize = lhsize;//較小的size
+      size_t offset = minsize - 1;
+      for (size_t i = 0; i < minsize; i++) {
+          if (*(difference.integer.begin() + offset - i) >=
+              *(subtraction.integer.begin() + offset - i)) {
+              *(result.integer.begin() + offset - i) =
+                  *(difference.integer.begin() + offset - i) -
+                  *(subtraction.integer.begin() + offset - i);
+          }
+          else {
+              *(result.integer.begin() + offset - i) =
+                  *(difference.integer.begin() + offset - i) + 10 -
+                  *(subtraction.integer.begin() + offset - i);
+              *(result.integer.begin() + offset - i + 1) -= 1;
+          }
+      }
+      difference.operator=(result);
+      while (difference.leadingZero()) {
+          difference.integer.erase(difference.integer.end() - 1);
+      }
       if( difference.leadingZero() )
          cout << "difference has a leading zero!\n";
 
+      
       return difference;
    }
 
@@ -463,9 +486,10 @@ public:
           }
       }
       for (size_t i = 0; i < prdsize; i++) {
-          if (*(product.integer.end() - i) == 0) {
-              product.integer.erase(product.integer.end() - i);
+          if (*(product.integer.end() - 1 - i) == 0) {
+              product.integer.erase(product.integer.end() - 1 - i);
               prdsize--;
+              i--;
           }
           else {
               break;
@@ -498,7 +522,7 @@ public:
       buffer.operator=(op2);
       Divisor = *this;
       for (size_t i = 0; i < diff; i++) {
-          buffer.operator*(ten);
+          buffer.operator*=(ten);
       }
       if (this->operator<(buffer)) {
           buffer.divideByTen();
