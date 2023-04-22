@@ -171,7 +171,7 @@ public:
          for (size_t i = 0; i < rightSize; i++) {
              myData.myFirst[i] = right.myData.myFirst[i];
          }
-         myData.myLast = myData.myFirst + rightSize;
+         myData.myLast = myData.myFirst + rightSize;//should minus 1??
 
       }
 
@@ -190,7 +190,7 @@ public:
           for (size_t i = position; i < Size; i++) {
               myData.myFirst[i] = myData.myFirst[i + 1];
           }
-          myData.myLast--;
+          myData.myLast-=1;
           return myData.myFirst;
       }
       else
@@ -428,7 +428,7 @@ public:
       size_t lhsize = integer.size(), rhsize = op2.integer.size(), minsize=0;
       //假設無負數
       (lhsize > rhsize) ? minsize = rhsize : minsize = lhsize;//較小的size
-      size_t offset = minsize - 1;
+      int offset = minsize - 1;
       for (size_t i = 0; i < minsize; i++) {
           if (*(difference.integer.begin() + offset - i) >=
               *(subtraction.integer.begin() + offset - i)) {
@@ -440,7 +440,16 @@ public:
               *(result.integer.begin() + offset - i) =
                   *(difference.integer.begin() + offset - i) + 10 -
                   *(subtraction.integer.begin() + offset - i);
-              *(result.integer.begin() + offset - i + 1) -= 1;
+              //
+              for (int j = 1;; j++) {
+                  if (*(result.integer.begin() + offset - i + j) != 0) {
+                      *(result.integer.begin() + offset - i + j) -= 1;
+                      break;
+                  }
+                  else {
+                      *(result.integer.begin() + offset - i + j) = 9;
+                  }
+              }
           }
       }
       difference.operator=(result);
@@ -481,8 +490,9 @@ public:
       //check carry
       for (size_t i = 0; i < prdsize; i++) {
           if (*(prd + i) > 9) {
-              *(prd + i) -= 9;
-              *(prd + i + 1) += 1;
+              *(prd + i + 1) += *(prd+i)/10;
+              *(prd + i) %= 10;
+              
           }
       }
       for (size_t i = 0; i < prdsize; i++) {
@@ -515,10 +525,11 @@ public:
       HugeInteger zero;
       if( *this < op2 )
          return zero;
-      HugeInteger quotient, remainder;
       HugeInteger buffer, ten, Divisor;
+      //quotient的size??
+      HugeInteger quotient(size()-op2.size()), remainder;
       ten.convert(10);
-      size_t diff = size() - op2.size();
+      int diff = size() - op2.size(), quotientOffset=0;
       buffer.operator=(op2);
       Divisor = *this;
       for (size_t i = 0; i < diff; i++) {
@@ -527,14 +538,16 @@ public:
       if (this->operator<(buffer)) {
           buffer.divideByTen();
       }
+      //如果相同位數?
       while (!Divisor.operator<(op2)) {
           if (buffer.operator<=(Divisor)) {
               Divisor.operator-=(buffer);
-              quotient.helpIncrement();
+              *(quotient.integer.end() - quotientOffset - 1) += 1;
               remainder.operator=(Divisor);
           }
           else if (!buffer.operator<(Divisor)) {
               buffer.divideByTen();
+              quotientOffset++;
           }
       }
 
@@ -751,11 +764,11 @@ void solution1()
 int main()
 {
    // execute the following 6 instructions one by one, each of them should get an AC
-   solution1< int >();
-//   solution1< unsigned int >();
+//   solution1< int >();
+// solution1< unsigned int >();
 //   solution1< long int >();
 //   solution1< unsigned long int >();
-//   solution1< long long int >();
+   solution1< long long int >();
 //   solution1< unsigned long long int >();
 
    system( "pause" );
