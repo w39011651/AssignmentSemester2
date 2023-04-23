@@ -583,4 +583,5 @@ int main()
 //   solution1< unsigned long long int >();
 
    system( "pause" );
+   //TEST GITHUB PUSH
 }
