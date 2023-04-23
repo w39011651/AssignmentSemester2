@@ -286,14 +286,15 @@ private:
 template< typename Ty >
 bool operator==( const list< Ty > &left, const list< Ty > &right )
 {
-    if (left.myData.mySize != right.myData.mySize) {
+    size_t lhsize = left.size(), rhsize = right.size();
+    if ( lhsize != rhsize ) {
         return false;
     }
     else {
-        typename Ty::const_iterator rLit = left.myData.myHead->prev;
-        typename Ty::const_iterator rRit = right.myData.myHead->prev;
-        for (; rLit != left.myData.myHead;) {
-            if (*(rLit) != *(rRit)) {
+        typename list<Ty>::iterator rLit = left.end()->prev;
+        typename list<Ty>::iterator rRit = right.end()->prev;
+        for (; rLit != left.end();) {
+            if (rLit != rRit) {
                 return false;
             }
             rLit = rLit->prev;
@@ -355,8 +356,8 @@ public:
    // function that tests if one HugeInteger is less than another
    bool operator<( HugeInteger &right )
    {
-       typename T::iterator lit = *(integer.end())->prev;
-       typename T::iterator rit = *(right.integer.end())->prev;
+       typename T::iterator lit = integer.end()->prev;
+       typename T::iterator rit = right.integer.end()->prev;
        size_t lhs = size(), rhs = right.size();
        if (lhs > rhs) {
            return false;
@@ -366,15 +367,15 @@ public:
        } 
        else {
            for (;lit!=integer.end();) {
-               if (*(lit)->myVal < *(rit)->myVal) {
+               if (lit->myVal < rit->myVal) {
                    return true;
                }
-               else if (*(lit)->myVal > *(rit)->myVal) {
+               else if (lit->myVal > rit->myVal) {
                    return false;
                }
                else {
-                   lit = *(lit)->prev;
-                   rit = *(rit)->prev;
+                   lit = lit->prev;
+                   rit = rit->prev;
                }
            }
        }
@@ -395,9 +396,40 @@ public:
          return zero;
 
       HugeInteger difference( *this );
-
-
-
+      typename T::iterator it1 = integer.begin();
+      typename T::const_iterator it2 = op2.integer.begin();
+      typename T::iterator it3 = difference.integer.begin();
+      //calculate
+      for (; it2 != op2.integer.end();) {
+          if (it3->myVal < it2->myVal) {
+              typename T::iterator itTemp = it3->next;
+              for (; itTemp->myVal != 0; itTemp = itTemp->next) {
+                  if (itTemp->myVal > 0) {
+                      itTemp->myVal -= 1;
+                      break;
+                  }
+                  else {
+                      itTemp->myVal += 9;
+                  }
+              }
+              it3->myVal += 10;
+          }
+          it3->myVal -= it2->myVal;
+          it3 = it3->next;
+          it2 = it2->next;
+      }
+      //check leading zero
+      it3 = difference.integer.end()->prev;
+      while (true) {
+          if (it3->myVal == 0) {
+              typename T::iterator itTemp = it3->prev;
+              difference.integer.erase(it3);
+              it3 = itTemp;
+          }
+          else {
+              break;
+          }
+      }
       if( difference.leadingZero() )
          cout << "difference has a leading zero!\n";
 
@@ -418,8 +450,14 @@ public:
          return zero;
 
       HugeInteger product( integer.size() + op2.integer.size() );
-
-
+      typename T::iterator productIt = product.integer.begin();
+      typename T::iterator it1 = integer.begin(), end1=integer.end();
+      typename T::iterator it2 = op2.integer.begin(), end2=op2.integer.end();
+      for (; it1 != end1; it1 = it1->next) {
+          for (; it2 != end2; it2 = it2->next) {
+              
+          }//how to make the iterator of product??
+      }
 
       if( product.leadingZero() )
          cout << "product has a leading zero!\n";
@@ -441,7 +479,7 @@ public:
       if( *this < op2 )
          return zero;
 
-
+      HugeInteger quotient;
 
       return quotient;
    } // end function operator/
