@@ -424,37 +424,39 @@ public:
 
       HugeInteger difference( *this );
 
-      HugeInteger subtraction(op2), result(difference);
-      size_t lhsize = integer.size(), rhsize = op2.integer.size(), minsize=0;
-      //假設無負數
-      (lhsize > rhsize) ? minsize = rhsize : minsize = lhsize;//較小的size
-      int offset = minsize - 1;
-      for (size_t i = 0; i < minsize; i++) {
-          if (*(difference.integer.begin() + offset - i) >=
-              *(subtraction.integer.begin() + offset - i)) {
-              *(result.integer.begin() + offset - i) =
-                  *(difference.integer.begin() + offset - i) -
-                  *(subtraction.integer.begin() + offset - i);
-          }
-          else {
-              *(result.integer.begin() + offset - i) =
-                  *(difference.integer.begin() + offset - i) + 10 -
-                  *(subtraction.integer.begin() + offset - i);
-              //
+      typename T::iterator it1 = integer.begin();
+      typename T::const_iterator it2 = op2.integer.begin();
+      typename T::iterator it3 = difference.integer.begin();
+      // iterator of the three objects
+      // assume that op1 must greater than op2
+      size_t rhsize = op2.integer.size();
+      for (; it2 != op2.integer.end();) {
+          if (*(it3) < *(it2)) {
               for (int j = 1;; j++) {
-                  if (*(result.integer.begin() + offset - i + j) != 0) {
-                      *(result.integer.begin() + offset - i + j) -= 1;
+                  if (*(it3 + j) > 0) {
+                      *(it3 + j) -= 1;
                       break;
                   }
                   else {
-                      *(result.integer.begin() + offset - i + j) = 9;
+                      *(it3 + j) += 9;
                   }
               }
+              *it3 += 10;
           }
+          *(it3) -= *(it2);
+          it3++;
+          it2++;
       }
-      difference.operator=(result);
-      while (difference.leadingZero()) {
-          difference.integer.erase(difference.integer.end() - 1);
+      it3 = difference.integer.end() - 1;
+      //check leading zero
+      while (true) {
+          if (*it3 == 0) {
+              difference.integer.erase(it3);
+              it3--;
+          }
+          else {
+              break;
+          }
       }
       if( difference.leadingZero() )
          cout << "difference has a leading zero!\n";
@@ -525,32 +527,35 @@ public:
       HugeInteger zero;
       if( *this < op2 )
          return zero;
-      HugeInteger buffer, ten, Divisor;
-      //quotient的size??
-      HugeInteger quotient(size()-op2.size()), remainder;
-      ten.convert(10);
-      int diff = size() - op2.size(), quotientOffset=0;
-      buffer.operator=(op2);
-      Divisor = *this;
-      for (size_t i = 0; i < diff; i++) {
-          buffer.operator*=(ten);
+      HugeInteger Dividend(*this), Divisor(op2);
+      HugeInteger buffer(Divisor);
+      int sizeDiff = size() - op2.size();
+      size_t quotientSize = sizeDiff;
+      //construct a ten hugeInteger
+      HugeInteger Ten;
+      Ten.convert(10);
+      //make divisor greater
+      for (int i = 0; i < sizeDiff; i++) {
+          buffer.operator*=(Ten);
       }
-      if (this->operator<(buffer)) {
+      //check that is divisor greater than dividend?
+      if (Dividend.operator<(buffer)) {
           buffer.divideByTen();
       }
-      //如果相同位數?
-      while (!Divisor.operator<(op2)) {
-          if (buffer.operator<=(Divisor)) {
-              Divisor.operator-=(buffer);
-              *(quotient.integer.end() - quotientOffset - 1) += 1;
-              remainder.operator=(Divisor);
-          }
-          else if (!buffer.operator<(Divisor)) {
-              buffer.divideByTen();
-              quotientOffset++;
-          }
+      else {
+          quotientSize++;
       }
-
+      HugeInteger quotient(quotientSize);
+      HugeInteger remainder(Dividend);
+      typename T::iterator ritQ = quotient.integer.end() - 1;
+      for (int k = quotientSize - 1; k >= 0; k--) {
+          while (buffer.operator<=(remainder)) {
+              remainder.operator-=(buffer);
+              *(quotient.integer.begin() + k) += 1;
+              if (remainder.isZero())return quotient;
+          }
+          buffer.divideByTen();
+      }
       return quotient;
    } // end function operator/
 
