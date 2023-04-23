@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Student ID - hw7-1.cpp">
+    <ClCompile Include="Student ID - hw7-2.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
   </ItemGroup>

@@ -82,9 +82,17 @@ public:
       myData.myHead = new node;
       myData.myHead->myVal = Ty();
       myData.myHead->prev = myData.myHead->next = myData.myHead;
-
-
-
+      nodePtr current = myData.myHead;
+      for (size_t i = 0; i < count; i++) {
+          current->next = new node;
+          //new node initialized
+          current->next->prev = current;
+          current->next->next = myData.myHead;
+          current->myVal = Ty();
+          //
+          current = current->next;
+          myData.mySize++;
+      }
    }
 
    // copy constructor
@@ -93,8 +101,22 @@ public:
    list( const list &right )
       : myData()
    {
-
-
+       myData.myHead = new node;
+       myData.myHead->myVal = right.myData.myHead->myVal;
+       myData.myHead->prev = myData.myHead->next = myData.myHead;
+       //myData.myHead initialized
+       nodePtr LeftCurrent = myData.myHead, RightCurrent=right.myData.myHead;
+       for (size_t i = 0; i < right.myData.mySize; i++) {
+           LeftCurrent->next = new node;
+           //pointer 
+           LeftCurrent->next->prev = LeftCurrent;
+           LeftCurrent->next->next = myData.myHead;
+           //
+           LeftCurrent = LeftCurrent->next;
+           RightCurrent = RightCurrent->next;
+           myData.mySize++;
+           LeftCurrent->myVal = RightCurrent->myVal;
+       }
 
    }
 
@@ -114,10 +136,27 @@ public:
    list& operator=( const list &right )
    {
       if( this != &right )
-
-
-
-
+          if (myData.mySize < right.myData.mySize) {
+              nodePtr current = myData.myHead->prev;//last one
+              for (; myData.mySize < right.myData.mySize; myData.mySize++) {
+                  current->next = new node;
+                  current->next->prev = current;
+                  current->next->next = myData.myHead;
+                  current->next->myVal = Ty();
+                  //
+                  current = current->next;
+              }
+          }
+      nodePtr LeftCurrent = myData.myHead->next, RightCurrent=right.myData.myHead->next;
+      for (; RightCurrent != right.myData.myHead;) 
+      {
+          LeftCurrent->myVal = RightCurrent->myVal;
+          //simulate iterator
+          LeftCurrent = LeftCurrent->next;
+          RightCurrent = RightCurrent->next;
+      }
+      LeftCurrent->prev->next = myData.myHead;
+      myData.mySize = right.myData.mySize;
       return *this;
    }
 
@@ -201,9 +240,15 @@ public:
    // Returns an iterator that points to the newly inserted element.
    iterator insert( const_iterator where, const Ty &val ) // insert val at where
    {
-
-
-
+       nodePtr append = new node;
+       nodePtr front = where->prev;
+       append->prev = front;
+       append->next = front->next;
+       append->myVal = val;
+       front->next = append;
+       front->next->prev = append;
+       myData.mySize++;
+       return append;
    }
 
    // Removes from the list container the element at the specified position.
@@ -212,9 +257,12 @@ public:
    // This is the container end if the operation erased the last element in the sequence.
    iterator erase( const_iterator where )
    {
-
-
-
+       nodePtr front = where->prev, after=where->next;
+       front = after;
+       after = front;
+       delete where;
+       myData.mySize--;
+       return myData.myHead;
    }
 
    // Removes all elements from the list container (which are destroyed),
@@ -223,9 +271,10 @@ public:
    {
       if( myData.mySize != 0 ) // the list is not empty
       {
-
-
-
+          nodePtr current = myData.myHead->prev, pos=current;
+          for (current; current != myData.myHead;pos=current ) {
+              erase(pos);
+          }
       }
    }
 
@@ -237,9 +286,21 @@ private:
 template< typename Ty >
 bool operator==( const list< Ty > &left, const list< Ty > &right )
 {
-
-
-
+    if (left.myData.mySize != right.myData.mySize) {
+        return false;
+    }
+    else {
+        typename Ty::const_iterator rLit = left.myData.myHead->prev;
+        typename Ty::const_iterator rRit = right.myData.myHead->prev;
+        for (; rLit != left.myData.myHead;) {
+            if (*(rLit) != *(rRit)) {
+                return false;
+            }
+            rLit = rLit->prev;
+            rRit = rRit->prev;
+        }
+        return true;
+    }
 }
 
 template< typename Ty >
@@ -294,9 +355,29 @@ public:
    // function that tests if one HugeInteger is less than another
    bool operator<( HugeInteger &right )
    {
-
-
-
+       typename T::iterator lit = *(integer.end())->prev;
+       typename T::iterator rit = *(right.integer.end())->prev;
+       size_t lhs = size(), rhs = right.size();
+       if (lhs > rhs) {
+           return false;
+       }
+       else if (lhs < rhs) {
+           return true;
+       } 
+       else {
+           for (;lit!=integer.end();) {
+               if (*(lit)->myVal < *(rit)->myVal) {
+                   return true;
+               }
+               else if (*(lit)->myVal > *(rit)->myVal) {
+                   return false;
+               }
+               else {
+                   lit = *(lit)->prev;
+                   rit = *(rit)->prev;
+               }
+           }
+       }
    } // end function operator<
 
    // function that tests if one HugeInteger is less than or equal to another
