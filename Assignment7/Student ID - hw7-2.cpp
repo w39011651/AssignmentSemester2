@@ -5,6 +5,7 @@ using std::cout;
 using std::endl;
 using std::ostream;
 
+
 const int maxSize = 200;
 
 template< typename ValueType >
@@ -311,7 +312,7 @@ bool operator==( const list< Ty > &left, const list< Ty > &right )
         typename list<Ty>::iterator rLit = left.end()->prev;
         typename list<Ty>::iterator rRit = right.end()->prev;
         for (; rLit != left.end();) {
-            if (rLit != rRit) {
+            if (rLit->myVal != rRit->myVal) {
                 return false;
             }
             rLit = rLit->prev;
@@ -395,6 +396,7 @@ public:
                    rit = rit->prev;
                }
            }
+           return false;
        }
    } // end function operator<
 
@@ -543,7 +545,7 @@ public:
       typename T::iterator quotientRIt = quotient.integer.end()->prev;
       typename T::iterator quoend = quotient.integer.end();
       for (;quotientRIt!=quoend;quotientRIt=quotientRIt->prev) {
-          while (buffer.operator<(remainder)) {
+          while (buffer.operator<=(remainder)) {
               remainder.operator-=(buffer);
               quotientRIt->myVal++;
               if (remainder.isZero())return quotient;
@@ -697,7 +699,6 @@ ostream& operator<<( ostream &output, HugeInteger< T > hugeInteger )
    return output; // enables cout << x << y;
 }
 
-
 template< typename T1, typename T2 >
 void solution2( T2 t, T2 a, T2 b )
 {
@@ -747,6 +748,7 @@ void solution2( T2 t, T2 a, T2 b )
                   cout << quotient << endl;
                else
                   cout << "is not an integer with less than 100 digits.\n";
+
             }
          }
       }
@@ -770,5 +772,5 @@ int main()
 //   solution1< long long int >();
    solution1< unsigned long long int >();
 
-   system( "pause" );
+   system("pause");
 }
