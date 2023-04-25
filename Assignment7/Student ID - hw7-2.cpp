@@ -87,12 +87,14 @@ public:
           current->next = new node;
           //new node initialized
           current->next->prev = current;
-          current->next->next = myData.myHead;
           current->myVal = Ty();
           //
           current = current->next;
           myData.mySize++;
       }
+      current->next = myData.myHead;
+      current->myVal = Ty();
+      myData.myHead->prev = current;
    }
 
    // copy constructor
@@ -105,19 +107,22 @@ public:
        myData.myHead->myVal = right.myData.myHead->myVal;
        myData.myHead->prev = myData.myHead->next = myData.myHead;
        //myData.myHead initialized
-       nodePtr LeftCurrent = myData.myHead, RightCurrent=right.myData.myHead;
-       for (size_t i = 0; i < right.myData.mySize; i++) {
+       nodePtr LeftCurrent = myData.myHead, RightCurrent=right.myData.myHead->next;
+       while(myData.mySize!=right.myData.mySize) {
            LeftCurrent->next = new node;
-           //pointer 
            LeftCurrent->next->prev = LeftCurrent;
-           LeftCurrent->next->next = myData.myHead;
-           //
+           LeftCurrent = LeftCurrent->next;
+           myData.mySize++;
+       }
+       LeftCurrent->next = myData.myHead;
+       myData.myHead->prev = LeftCurrent;
+
+       LeftCurrent = myData.myHead->next;
+       while (LeftCurrent != myData.myHead) {
+           LeftCurrent->myVal = RightCurrent->myVal;
            LeftCurrent = LeftCurrent->next;
            RightCurrent = RightCurrent->next;
-           myData.mySize++;
-           LeftCurrent->myVal = RightCurrent->myVal;
        }
-
    }
 
    // List destructor
@@ -135,28 +140,37 @@ public:
    // (with "right" preserving its contents).
    list& operator=( const list &right )
    {
-      if( this != &right )
-          if (myData.mySize < right.myData.mySize) {
-              nodePtr current = myData.myHead->prev;//last one
-              for (; myData.mySize < right.myData.mySize; myData.mySize++) {
-                  current->next = new node;
-                  current->next->prev = current;
-                  current->next->next = myData.myHead;
-                  current->next->myVal = Ty();
-                  //
-                  current = current->next;
-              }
-          }
-      nodePtr LeftCurrent = myData.myHead->next, RightCurrent=right.myData.myHead->next;
-      for (; RightCurrent != right.myData.myHead;) 
-      {
-          LeftCurrent->myVal = RightCurrent->myVal;
-          //simulate iterator
-          LeftCurrent = LeftCurrent->next;
-          RightCurrent = RightCurrent->next;
-      }
-      LeftCurrent->prev->next = myData.myHead;
-      myData.mySize = right.myData.mySize;
+       if (this != &right)
+       {
+           if (myData.mySize < right.myData.mySize) {
+               nodePtr current = myData.myHead->prev;//last one
+               while (myData.mySize != right.myData.mySize) {
+                   insert(current->next, Ty());
+                   current = current->next;
+               }
+               current->next = myData.myHead;
+               myData.myHead->prev = current;
+           }
+           else if(myData.mySize>right.myData.mySize) {
+               nodePtr current = myData.myHead->prev;//last one
+               nodePtr Temp = current->prev;
+               while (myData.mySize > right.myData.mySize) {
+                   erase(current);
+                   current = Temp;
+                   Temp = Temp->prev;
+               }
+               current->next = myData.myHead;
+               myData.myHead->prev = current;
+           }
+           nodePtr LeftCurrent = myData.myHead->next, RightCurrent = right.myData.myHead->next;
+           for (; RightCurrent != right.myData.myHead;)
+           {
+               LeftCurrent->myVal = RightCurrent->myVal;
+               //simulate iterator
+               LeftCurrent = LeftCurrent->next;
+               RightCurrent = RightCurrent->next;
+           }
+       }
       return *this;
    }
 
@@ -245,8 +259,9 @@ public:
        append->prev = front;
        append->next = front->next;
        append->myVal = val;
-       front->next = append;
+       
        front->next->prev = append;
+       front->next = append;
        myData.mySize++;
        return append;
    }
@@ -257,9 +272,9 @@ public:
    // This is the container end if the operation erased the last element in the sequence.
    iterator erase( const_iterator where )
    {
-       nodePtr front = where->prev, after=where->next;
-       front = after;
-       after = front;
+       nodePtr front = where->prev, after=where->next, temp=after;
+       after->prev = front;
+       front->next=temp;
        delete where;
        myData.mySize--;
        return myData.myHead;
@@ -273,7 +288,9 @@ public:
       {
           nodePtr current = myData.myHead->prev, pos=current;
           for (current; current != myData.myHead;pos=current ) {
+              current = current->prev;
               erase(pos);
+              
           }
       }
    }
@@ -403,7 +420,7 @@ public:
       for (; it2 != op2.integer.end();) {
           if (it3->myVal < it2->myVal) {
               typename T::iterator itTemp = it3->next;
-              for (; itTemp->myVal != 0; itTemp = itTemp->next) {
+              for (;; itTemp = itTemp->next) {
                   if (itTemp->myVal > 0) {
                       itTemp->myVal -= 1;
                       break;
@@ -420,6 +437,9 @@ public:
       }
       //check leading zero
       it3 = difference.integer.end()->prev;
+      if (difference.isZero()) {
+          return zero;
+      }
       while (true) {
           if (it3->myVal == 0) {
               typename T::iterator itTemp = it3->prev;
@@ -450,15 +470,43 @@ public:
          return zero;
 
       HugeInteger product( integer.size() + op2.integer.size() );
-      typename T::iterator productIt = product.integer.begin();
+      
       typename T::iterator it1 = integer.begin(), end1=integer.end();
       typename T::iterator it2 = op2.integer.begin(), end2=op2.integer.end();
-      for (; it1 != end1; it1 = it1->next) {
-          for (; it2 != end2; it2 = it2->next) {
-              
-          }//how to make the iterator of product??
-      }
 
+      typename T::iterator productIt1 = product.integer.begin(), end3=product.integer.end();
+      typename T::iterator productIt2 = productIt1;
+
+      for (; it1 != end1; it1 = it1->next) {
+          for (it2=op2.integer.begin(); it2 != end2; it2 = it2->next) {
+              productIt1->myVal += (it1->myVal) * (it2->myVal);
+              productIt1 = productIt1->next;
+          }//how to make the iterator of product??
+          productIt2 = productIt2->next;
+          productIt1 = productIt2;
+      }
+      //check carry
+      productIt1 = product.integer.begin();
+      for (; productIt1 != end3; productIt1 = productIt1->next) {
+          if (productIt1->myVal > 9) {
+              productIt1->next->myVal += productIt1->myVal / 10;
+              productIt1->myVal %= 10;
+          }
+      }
+      //check leading zero
+      productIt1 = product.integer.end()->prev;
+      productIt2 = productIt1;
+      while (true) {
+          if (productIt1->myVal == 0) {
+              productIt2 = productIt2->prev;
+              product.integer.erase(productIt1);
+              
+              productIt1 = productIt2;
+          }
+          else {
+              break;
+          }
+      }
       if( product.leadingZero() )
          cout << "product has a leading zero!\n";
 
@@ -479,8 +527,29 @@ public:
       if( *this < op2 )
          return zero;
 
-      HugeInteger quotient;
-
+      HugeInteger Dividend(*this), Divisor(op2), buffer(op2), ten;
+      size_t SizeDiff = Dividend.size() - Divisor.size(), quotientSize=SizeDiff;
+      ten.convert(10);
+      for (size_t i = 0; i < SizeDiff; i++) {
+          buffer.operator*=(ten);
+      }
+      if (Dividend.operator<(buffer)) {
+          buffer.divideByTen();
+      }
+      else {
+          quotientSize++;
+      }
+      HugeInteger quotient(quotientSize), remainder(Dividend);
+      typename T::iterator quotientRIt = quotient.integer.end()->prev;
+      typename T::iterator quoend = quotient.integer.end();
+      for (;quotientRIt!=quoend;quotientRIt=quotientRIt->prev) {
+          while (buffer.operator<(remainder)) {
+              remainder.operator-=(buffer);
+              quotientRIt->myVal++;
+              if (remainder.isZero())return quotient;
+          }
+          buffer.divideByTen();
+      }
       return quotient;
    } // end function operator/
 
@@ -694,13 +763,12 @@ void solution1()
 int main()
 {
    // execute the following 6 instructions one by one, each of them should get an AC
-   solution1< int >();
+//   solution1< int >();
 //   solution1< unsigned int >();
 //   solution1< long int >();
 //   solution1< unsigned long int >();
 //   solution1< long long int >();
-//   solution1< unsigned long long int >();
+   solution1< unsigned long long int >();
 
    system( "pause" );
-   //TEST GITHUB PUSH
 }
