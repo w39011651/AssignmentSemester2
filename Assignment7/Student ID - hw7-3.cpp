@@ -477,12 +477,14 @@ public:
    vector( const vector &right )
       : myData()
    {
-       size_t rightsize = right.size();
-       myData.myFirst = new value_type[rightsize];
+       size_t rightsize = right.myData.myLast-right.myData.myFirst;
+       size_t rightCapacity = right.myData.myEnd-right.myData.myFirst;
+       myData.myFirst = new value_type[rightCapacity];
        for (size_t i = 0; i < rightsize; i++) {
            myData.myFirst[i] = right.myData.myFirst[i];
        }
-       myData.myLast = myData.myEnd = myData.myFirst + rightsize;
+       myData.myLast = myData.myFirst + rightsize;
+       myData.myEnd = myData.myFirst + rightCapacity;
    }
 
    ~vector()
@@ -508,17 +510,17 @@ public:
 
             vector temp(*this);
             delete[] myData.myFirst;
-            size_t tempsize = temp.size();
             myData.myFirst = new value_type[newCapacity]{};
             myData.myEnd = myData.myFirst + newCapacity;
             for (size_t i = 0; i < position; i++) {
                 myData.myFirst[i] = temp.myData.myFirst[i];
             }
             myData.myFirst[position] = val;
-            for (size_t i = position; i < tempsize; i++) {
+            for (size_t i = position; i < originalSize; i++) {
                 myData.myFirst[i + 1] = temp.myData.myFirst[i];
             }
-            myData.myLast = myData.myFirst + tempsize + 1;
+            myData.myLast = myData.myFirst + originalSize + 1;
+            return iterator(myData.myFirst + position);
          }
          else
          {
@@ -528,6 +530,7 @@ public:
              }
              myData.myFirst[position] = val;
              myData.myLast++;
+             return iterator(myData.myFirst + position);
          }
       }
       else
@@ -570,7 +573,7 @@ public:
               myData.myFirst[i] = myData.myFirst[i + 1];
           }
           myData.myLast -= 1;
-          return myData.myFirst;
+          return iterator(myData.myFirst);
       }
       else
          return iterator( nullptr );
@@ -1629,11 +1632,11 @@ int main()
 {
    // execute the following 6 instructions one by one, each of them should get an AC
 //   solution1< int >();
-   solution1< unsigned int >();
+//   solution1< unsigned int >();
 //   solution1< long int >();
 //   solution1< unsigned long int >();
 //   solution1< long long int >();
-//   solution1< unsigned long long int >();
+   solution1< unsigned long long int >();
 
    system( "pause" );
 }
